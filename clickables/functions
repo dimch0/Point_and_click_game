@@ -1,0 +1,111 @@
+import pygame,sys, random
+from pygame.locals import *
+
+pygame.init()
+
+# DISPLAY SETTING
+def setDisplay(screen_width,screen_height):
+    return pygame.display.set_mode((screen_width,screen_height))
+
+gameDisplay = setDisplay(800,600)
+
+
+# FONTS & COLOURS
+white = (255,255,255)
+purp = (170,167,194)
+font_0 = pygame.font.SysFont(None, 25)
+font_1 = pygame.font.SysFont(None, 35)
+font_2 = pygame.font.SysFont(None, 46)
+font_3 = pygame.font.SysFont(None, 60)
+
+# IMAMGE LOADER
+def imgLoader(imagefile):
+    return pygame.image.load("images/"+imagefile)
+
+#msg_panel = imgLoader("msg_panel.png")
+
+# MESSAGES TO SCREEN
+def message(msg,font = font_2,tx = 5,ty = 563):
+    #gameDisplay.blit(msg_panel,[0,560])
+    text = font.render(msg, True, white)
+    gameDisplay.blit(text,(tx,ty))
+
+# CALCULATING POSITION OF OBJECTS AND BUTTONS WITH COORDINATES AND STARTING POINT
+def mapping(coordinates,point = [0,0]):
+    evens = []
+    odds = []
+    for i,x in enumerate(coordinates):
+        if i % 2 != 0:
+            odds.append(x+point[1])
+        else:
+            evens.append(x+point[0])
+    return list(zip(evens,odds))
+
+# determine if a point is inside a given polygon or not
+# Polygon is a list of (x,y) pairs.
+def point_inside_polygon(mouse_pos,poly):
+    x = mouse_pos[0]
+    y = mouse_pos[1]
+    n = len(poly)
+    inside =False
+
+    p1x,p1y = poly[0]
+    for i in range(n+1):
+        p2x,p2y = poly[i % n]
+        if y > min(p1y,p2y):
+            if y <= max(p1y,p2y):
+                if x <= max(p1x,p2x):
+                    if p1y != p2y:
+                        xinters = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
+                    if p1x == p2x or x <= xinters:
+                        inside = not inside
+        p1x,p1y = p2x,p2y
+
+    return inside
+
+def mouse_in_poly(poly):
+    x = pygame.mouse.get_pos()[0]
+    y = pygame.mouse.get_pos()[1]
+    n = len(poly)
+    inside =False
+
+    p1x,p1y = poly[0]
+    for i in range(n+1):
+        p2x,p2y = poly[i % n]
+        if y > min(p1y,p2y):
+            if y <= max(p1y,p2y):
+                if x <= max(p1x,p2x):
+                    if p1y != p2y:
+                        xinters = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
+                    if p1x == p2x or x <= xinters:
+                        inside = not inside
+        p1x,p1y = p2x,p2y
+
+    return inside
+
+# GENERATING A RANDOM POINT IN LEGAL ZONE FOR THE CREATURES
+def randomPoint():
+    generating = True
+    legal_zone = mapping(
+        [252, 256, 316, 226, 346, 194, 414, 190, 416, 242, 448, 308, 550, 352, 586, 310, 724, 260, 736, 380, 688, 412,
+         720, 486, 666, 494, 580, 478, 322, 492, 314, 434, 124, 400, 92, 372, 284, 330, 282, 252])
+    while generating:
+        randomX = round(random.randint(0,800))
+        randomY = round(random.randint(0,600))
+        if point_inside_polygon((randomX,randomY),legal_zone):
+            return [randomX,randomY]
+            generating = False
+
+# FUNCTION THAT COLLECTS POINTS OF MOVEMENT from A to B
+def Tracks(point_A,Point_B,steps_number = 15):
+    track = []
+    ax = point_A[0]
+    ay = point_A[1]
+    bx = Point_B[0]
+    by = Point_B[1]
+    dx, dy = (bx - ax, by - ay)
+    stepx, stepy = int(dx / steps_number), int(dy / steps_number)
+    for i in range(steps_number+1):
+        step = [int(ax + stepx * i), int(ay + stepy * i)]
+        track.append(step)
+    return track
